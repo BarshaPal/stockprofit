@@ -1,0 +1,18 @@
+.table th {
+    background-color: #343a40;
+    color: white;
+    text-align: center;
+  }
+  
+  .table td {
+    text-align: center;
+  }
+  
+  .input-group {
+    width: 100%;
+  }
+  
+  .btn {
+    font-weight: bold;
+  }
+  
