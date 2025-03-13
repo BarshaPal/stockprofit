@@ -35,10 +35,10 @@ public ResponseEntity<String> getPDF() {
         }
     }
 
-    @GetMapping("/{date}")
-    public ExchangeRateEntity getExchangeRate(@PathVariable String date) throws Exception {
-//        SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
-//        Date parsedDate = dateFormat.parse(date);
-        return exchangeRateService.getExchangeRateByDate(date);
-    }
+//    @GetMapping("/{date}")
+//    public ExchangeRateEntity getExchangeRate(@PathVariable String date) throws Exception {
+////        SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
+////        Date parsedDate = dateFormat.parse(date);
+////        return exchangeRateService.getExchangeRateByDate(date);
+//    }
 }
