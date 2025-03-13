@@ -30,7 +30,7 @@ public class StockRateServiceImpl implements StockRateService {
         try (InputStream is = file.getInputStream();
              Workbook workbook = new XSSFWorkbook(is)) {
 
-            Sheet sheet = workbook.getSheet("stock_rates");
+            Sheet sheet = workbook.getSheet("summary_rates");
             List<StockRateEntity> stockRates = new ArrayList<>();
 
             for (int i = 1; i <= sheet.getLastRowNum(); i++) {
@@ -41,9 +41,9 @@ public class StockRateServiceImpl implements StockRateService {
                 String date = null;
 
                 Map<String, Consumer<Double>> rateSetters = new HashMap<>();
-                rateSetters.put("AMR", stock_rate::setGoogle);
-                rateSetters.put("EUR", stock_rate::setMicrosoft);
-                rateSetters.put("GBP", stock_rate::setSap);
+//                rateSetters.put("AMR", stock_rate::setGoogle);
+//                rateSetters.put("EUR", stock_rate::setMicrosoft);
+                rateSetters.put("SAP", stock_rate::setSap);
 //                rateSetters.put("JPY", rate::setJpy);
 //                rateSetters.put("AUD", rate::setAud);
 //                rateSetters.put("CAD", rate::setCad);
@@ -96,7 +96,7 @@ public class StockRateServiceImpl implements StockRateService {
 
 
     private String formatDate(Date date) {
-        SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy");
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
         return sdf.format(date);
     }
 

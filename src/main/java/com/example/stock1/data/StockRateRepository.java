@@ -11,6 +11,6 @@ import java.util.Optional;
 
 @Repository
 public interface StockRateRepository extends JpaRepository<StockRateEntity, String> {
-    Optional<StockRateEntity> findById(Date date);
+//    Optional<StockRateEntity> findById(Date date);
 //    Optional<ExchangeRateEntity> findByDate(LocalDate date);
 }

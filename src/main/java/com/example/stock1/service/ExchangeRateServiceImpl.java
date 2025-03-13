@@ -5,10 +5,13 @@ import com.example.stock1.entity.ExchangeRateEntity;
 import jakarta.transaction.Transactional;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-
+import yahoofinance.Stock;
+import yahoofinance.YahooFinance;
 import java.io.IOException;
 import java.io.InputStream;
 import java.text.ParseException;
@@ -18,6 +21,7 @@ import java.util.function.Consumer;
 
 @Service
 public class ExchangeRateServiceImpl implements ExchangeRateService {
+    private static final Logger logger = LoggerFactory.getLogger(ExchangeRateService.class);
 
     @Autowired
     private ExchangeRateRepository repository;
@@ -63,7 +67,6 @@ public class ExchangeRateServiceImpl implements ExchangeRateService {
                         Date extractedDate = getCellValueAsDate(cell);
                         if (extractedDate != null) {
                             String formattedDate = formatDate(extractedDate);
-                            System.out.println("Formatted Date: " + formattedDate);
                             date=formattedDate;
                             rate.setDate(formattedDate);
                     }
@@ -92,16 +95,70 @@ public class ExchangeRateServiceImpl implements ExchangeRateService {
         return "Fetched";
     }
 
+
+    @Override
+    public ExchangeRateEntity getExchangeRateByDate(String date) {
+        try {
+            ExchangeRateEntity rate = repository.findByDate(date);
+            if (rate == null) {
+                throw new Exception("Exchange rate not found for date: " + date);
+            }
+            return rate;
+        } catch (Exception e) {
+            throw new RuntimeException("Error fetching exchange rate", e);
+        }
+    }
+
+
+    @Override
+    public ExchangeRateEntity exchangeRateofCurrentDate() {
+        try {
+            ExchangeRateEntity rate = repository.findPresentRate();
+            if (rate == null) {
+                throw new Exception("Exchange rate not found for date: " );
+            }
+            return rate;
+        } catch (Exception e) {
+            throw new RuntimeException("Error fetching exchange rate", e);
+        }
+    }
+
+
+    @Override
+    public List<ExchangeRateEntity>  purchasesellingRate(String date) {
+        try {
+            Stock stock=YahooFinance.get("AAPL");
+            if (stock != null) {
+                logger.info("Stock Details - Symbol: {}, Currency: {}, Price: {}",
+                        stock.getSymbol(),
+                        stock.getCurrency(),
+                        stock.getQuote().getPrice());
+            } else {
+                logger.warn("Stock data for SAP is null");
+            }
+
+            List<ExchangeRateEntity> rate = repository.findPurchaseSellingRate(date);
+            if (rate == null) {
+                throw new Exception("Exchange rate not found for date: " );
+            }
+            return rate;
+        } catch (Exception e) {
+            throw new RuntimeException("Error fetching exchange rate", e);
+        }
+    }
+
+
+
+
     private String formatDate(Date date) {
-        SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy");
-        return sdf.format(date);
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+        return sdf.format(date).toString();
     }
 
     private Date getCellValueAsDate(Cell cell) {
         if (DateUtil.isCellDateFormatted(cell)) {
-            return cell.getDateCellValue(); // Directly returns a Java Date
+            return cell.getDateCellValue();
         } else {
-            // Convert Excel serial number to Java Date manually
             return DateUtil.getJavaDate(cell.getNumericCellValue());
         }
     }

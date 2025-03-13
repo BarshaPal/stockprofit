@@ -11,8 +11,7 @@ import java.util.List;
 import java.util.Optional;
 
 public interface StockRateService {
-    @Autowired
-    StockRateRepository stockRateRepository = null;
+
     String processExcel(MultipartFile file) throws IOException;
 
 }
