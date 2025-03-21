@@ -4,6 +4,7 @@ import com.example.stock1.entity.ExchangeRateEntity;
 import com.example.stock1.service.ExchangeRateService;
 import com.example.stock1.service.ForexService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
@@ -15,7 +16,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(origins = "*")
+
 @RestController
 @RequestMapping("/api/exchange")
 public class ExchangeRateController {
@@ -25,11 +27,24 @@ public class ExchangeRateController {
     private ExchangeRateService exchangeRateService;
     @Autowired
     private ForexService forexService;
+
+
 @GetMapping("/get")
 public ResponseEntity<String> getPDF() {
     String message = "Hello";
     return ResponseEntity.ok(message);
 }
+
+    @GetMapping("/currency/{currency}")
+    public ResponseEntity<?> getCurrencyRates(@PathVariable String currency) {
+        try {
+            List<Map<String, Object>> data = exchangeRateService.getRatesByCurrency(currency.toLowerCase());
+            return ResponseEntity.ok(data);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Invalid currency or server error.");
+        }
+    }
     @PostMapping("/upload")
     public ResponseEntity<String> uploadPDF(@RequestParam("file") MultipartFile file) {
         if (file.isEmpty()) {
@@ -45,14 +60,15 @@ public ResponseEntity<String> getPDF() {
     }
     @GetMapping("/{date}")
     public ExchangeRateEntity getExchangeRate(@PathVariable String date) throws Exception {
-//        SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
-//        Date parsedDate = dateFormat.parse(date);
+
         return exchangeRateService.getExchangeRateByDate(date);
     }
     @GetMapping("/currentRate")
     public ExchangeRateEntity getCurretnExchangeRate() throws Exception {
         return exchangeRateService.exchangeRateofCurrentDate();
     }
+
+
     @GetMapping("/forex")
     public void getForexCard() throws Exception {
          forexService.fetchAndStoreForexRates();

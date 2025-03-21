@@ -39,6 +39,6 @@ public ResponseEntity<String> getPDF() {
 //    public ExchangeRateEntity getExchangeRate(@PathVariable String date) throws Exception {
 ////        SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
 ////        Date parsedDate = dateFormat.parse(date);
-////        return exchangeRateService.getExchangeRateByDate(date);
+//        return exchangeRateService.getExchangeRateByDate(date);
 //    }
 }
