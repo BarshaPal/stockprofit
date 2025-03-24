@@ -35,6 +35,7 @@ public ResponseEntity<String> getPDF() {
     return ResponseEntity.ok(message);
 }
 
+
     @GetMapping("/currency/{currency}")
     public ResponseEntity<?> getCurrencyRates(@PathVariable String currency) {
         try {

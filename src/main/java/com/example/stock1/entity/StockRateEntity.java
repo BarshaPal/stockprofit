@@ -1,48 +1,75 @@
 package com.example.stock1.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
-
-import java.util.Date;
+import jakarta.persistence.*;
+import java.math.BigDecimal;
+import java.time.LocalDate;
 
 @Entity
 @Table(name = "stock_rates")
 public class StockRateEntity {
-    public String getDate() {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    private String company;
+    private String currency;
+
+    @Column(name = "date")
+    private LocalDate date;
+
+    @Column(name = "open")
+    private BigDecimal open;
+
+    @Column(name = "close")
+    private BigDecimal close;
+
+    // Getters and Setters
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getCompany() {
+        return company;
+    }
+
+    public void setCompany(String company) {
+        this.company = company;
+    }
+
+    public String getCurrency() {
+        return currency;
+    }
+
+    public void setCurrency(String currency) {
+        this.currency = currency;
+    }
+
+    public LocalDate getDate() {
         return date;
     }
 
-    public void setDate(String date) {
+    public void setDate(LocalDate date) {
         this.date = date;
     }
 
-    public Double getSap() {
-        return sap;
+    public BigDecimal getOpen() {
+        return open;
     }
 
-    public void setSap(Double sap) {
-        this.sap = sap;
+    public void setOpen(BigDecimal open) {
+        this.open = open;
     }
 
-    public Double getGoogle() {
-        return google;
+    public BigDecimal getClose() {
+        return close;
     }
 
-    public void setGoogle(Double google) {
-        this.google = google;
+    public void setClose(BigDecimal close) {
+        this.close = close;
     }
-
-    public Double getMicrosoft() {
-        return microsoft;
-    }
-
-    public void setMicrosoft(Double microsoft) {
-        this.microsoft = microsoft;
-    }
-
-    @Id
-    private String date;
-    private Double sap,google,microsoft;
-
 }
