@@ -10,7 +10,7 @@ import java.util.Date;
 import java.util.Optional;
 
 @Repository
-public interface StockRateRepository extends JpaRepository<StockRateEntity, String> {
-//    Optional<StockRateEntity> findById(Date date);
-//    Optional<ExchangeRateEntity> findByDate(LocalDate date);
+public interface StockDataRepository extends JpaRepository<StockRateEntity, Long> {
+    Optional<StockRateEntity> findByCompanyAndDate(String company, LocalDate date);
 }
+

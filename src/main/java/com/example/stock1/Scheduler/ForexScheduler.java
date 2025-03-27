@@ -10,8 +10,7 @@ import org.springframework.stereotype.Component;
 public class ForexScheduler {
     private final ForexService forexService;
 
-    // Runs every day at 10:00 AM
-    @Scheduled(cron = "0 0 12 * * ?")
+    @Scheduled(cron = "0 0 11 * * ?")
     public void scheduledForexUpdate() {
         forexService.fetchAndStoreForexRates();
     }

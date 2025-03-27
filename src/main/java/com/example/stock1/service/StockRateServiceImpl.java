@@ -1,142 +1,92 @@
 package com.example.stock1.service;
 
-import com.example.stock1.data.ExchangeRateRepository;
-import com.example.stock1.data.StockRateRepository;
-import com.example.stock1.entity.ExchangeRateEntity;
+import com.example.stock1.DTO.StockRateDTO;
+import com.example.stock1.data.StockDataRepository;
 import com.example.stock1.entity.StockRateEntity;
-import jakarta.transaction.Transactional;
-import org.apache.poi.ss.usermodel.*;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.client.RestTemplate;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
 import java.util.*;
-import java.util.function.Consumer;
 
 @Service
 public class StockRateServiceImpl implements StockRateService {
 
     @Autowired
-    private StockRateRepository stock_repository;
 
     private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("dd-MM-yyyy"); // Adjusted format
+    private final RestTemplate restTemplate;
+    private final StockDataRepository stockDataRepository;
 
-    @Transactional
-    public String processExcel(MultipartFile file) throws IOException {
-        try (InputStream is = file.getInputStream();
-             Workbook workbook = new XSSFWorkbook(is)) {
+    @Value("${google.script.api.url}")  // Store the URL in application.properties
+    private String apiUrl;
 
-            Sheet sheet = workbook.getSheet("summary_rates");
-            List<StockRateEntity> stockRates = new ArrayList<>();
+    public StockRateServiceImpl(RestTemplate restTemplate, StockDataRepository stockDataRepository) {
+        this.restTemplate = restTemplate;
+        this.stockDataRepository = stockDataRepository;
+    }
 
-            for (int i = 1; i <= sheet.getLastRowNum(); i++) {
-                Row row = sheet.getRow(i);
-                if (row == null) continue;
 
-                StockRateEntity stock_rate = new StockRateEntity();
-                String date = null;
+    private boolean isValidStock(StockRateEntity stock) {
+        return stock != null && stock.getCompany() != null && stock.getDate() != null
+                && stock.getOpen() != null && stock.getClose() != null;
+    }
 
-                Map<String, Consumer<Double>> rateSetters = new HashMap<>();
-//                rateSetters.put("AMR", stock_rate::setGoogle);
-//                rateSetters.put("EUR", stock_rate::setMicrosoft);
-                rateSetters.put("SAP", stock_rate::setSap);
-//                rateSetters.put("JPY", rate::setJpy);
-//                rateSetters.put("AUD", rate::setAud);
-//                rateSetters.put("CAD", rate::setCad);
-//                rateSetters.put("SGD", rate::setSgd);
-//                rateSetters.put("CHF", rate::setChf);
-//                rateSetters.put("CNY", rate::setCny);
-//                rateSetters.put("AED", rate::setAed);
+    public void fetchAndStoreAllStockData() {
+        ResponseEntity<StockRateEntity[]> response = restTemplate.getForEntity(apiUrl, StockRateEntity[].class);
+        System.out.println(response.getBody());
 
-                for (Cell cell : row) {
-                    int columnIndex = cell.getColumnIndex();
+        if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+            List<StockRateEntity> stocks = Arrays.asList(response.getBody());
 
-                    Cell titleCell = sheet.getRow(0).getCell(columnIndex);
-                    if (titleCell == null || titleCell.getCellType() != CellType.STRING) continue;
-                    String columnName = titleCell.getStringCellValue().trim();
+            for (StockRateEntity stock : stocks) {
+                if (!isValidStock(stock)) continue; // Skip invalid rows
 
-                    if (columnIndex == 0) {
-
-                        Date extractedDate = getCellValueAsDate(cell);
-                        if (extractedDate != null) {
-                            String formattedDate = formatDate(extractedDate);
-                            System.out.println("Formatted Date: " + formattedDate);
-                            date=formattedDate;
-                            stock_rate.setDate(formattedDate);
-                    }
-                        }
-                    else {
-                        Double calculatedstockRate = getCellValueAsDouble(cell);
-                        if (calculatedstockRate != null) {
-                            rateSetters.getOrDefault(columnName, v -> {}).accept(calculatedstockRate);
-                        }
-                    }
-                }
-
-                if (date != null) {
-                    stockRates.add(stock_rate);
-                }
+                stockDataRepository.findByCompanyAndDate(stock.getCompany(), stock.getDate())
+                        .ifPresentOrElse(existing -> {
+                            System.out.println("Data already exists for " + stock.getCompany() + " on " + stock.getDate());
+                        }, () -> {
+                            stockDataRepository.save(stock);
+                            System.out.println("Saved: " + stock);
+                        });
             }
-
-            System.out.println("Total records parsed: " + stockRates.size());
-            stock_repository.saveAll(stockRates);
-            System.out.println("Data saved successfully!");
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        return "Fetched";
-    }
-
-
-
-    private String formatDate(Date date) {
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-        return sdf.format(date);
-    }
-
-    private Date getCellValueAsDate(Cell cell) {
-        if (DateUtil.isCellDateFormatted(cell)) {
-            return cell.getDateCellValue(); // Directly returns a Java Date
-        } else {
-            // Convert Excel serial number to Java Date manually
-            return DateUtil.getJavaDate(cell.getNumericCellValue());
         }
     }
 
+    @Override
 
-    private Double getCellValueAsDouble(Cell cell) {
-        switch (cell.getCellType()) {
-            case STRING:
-                if ("NULL".equalsIgnoreCase(cell.getStringCellValue().trim())) {
-                    return null;
-                }
-                try {
-                    return Double.parseDouble(cell.getStringCellValue().trim());
-                } catch (NumberFormatException e) {
-                    System.out.println("Invalid number format in cell: " + cell.getStringCellValue());
-                    return null;
-                }
-            case NUMERIC:
-                return cell.getNumericCellValue();
-            case FORMULA:
-                return getFormulatedData(cell);
-            default:
-                return null;
+    public List<StockRateDTO> fetchAndStoreStockData(String company, LocalDate date) {
+        String url = String.format("%s?company=%s&date=%s", apiUrl, company, date);
+
+        ResponseEntity<StockRateEntity[]> response = restTemplate.getForEntity(url, StockRateEntity[].class);
+
+        List<StockRateDTO> savedStocks = new ArrayList<>();
+
+        if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
+            for (StockRateEntity stock : response.getBody()) {
+
+                StockRateDTO stockDTO = new StockRateDTO(
+                        stock.getCompany(),
+                        stock.getCurrency(),
+                        stock.getDate(),
+                        stock.getOpen(),
+                        stock.getClose()
+                );
+
+                savedStocks.add(stockDTO);
+                System.out.println("Saved: " + stockDTO);
+            }
         }
+
+        return savedStocks; // Return list of DTOs
     }
 
-    private Double getFormulatedData(Cell cell) {
-        switch (cell.getCachedFormulaResultType()) {
-            case NUMERIC:
-                return cell.getNumericCellValue();
-            default:
-                return null;
-        }
-    }
+
+
+
 }
