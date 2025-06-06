@@ -19,10 +19,11 @@ public class StockDataScheduler {
     @Scheduled(cron = "0 0 0 * * ?")  // Runs daily at midnight
     public void scheduledStockDataFetch() {
         LocalDate today = LocalDate.now();
+        String date=today.toString();
         List<String> companies = List.of("SAP", "GOOGLE");
 
         for (String company : companies) {
-            stockDataService.fetchAndStoreStockData(company, today);
+            stockDataService.fetchAndStoreAllStockData();
         }
     }
 }

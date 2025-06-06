@@ -1,17 +1,23 @@
 package com.example.stock1.DTO;
 
 import com.example.stock1.entity.StockRateEntity;
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 @Data
+@NoArgsConstructor
 @AllArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class StockRateDTO {
     private String company;
     private String currency;
-    private LocalDate date;
+//    @JsonFormat(pattern = "yyyy-MM-dd")
+    private String date;
     private BigDecimal open;
     private BigDecimal close;
 

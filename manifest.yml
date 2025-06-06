@@ -1,0 +1,22 @@
+---
+applications:
+- name: service
+  lifecycle: buildpack
+  buildpacks:
+  - sap_java_buildpack_jakarta
+  stack: cflinuxfs4
+  services:
+  - postgres
+  - Redis
+  routes:
+  - route: service.cfapps.us10-001.hana.ondemand.com
+    protocol: http1
+    options: {}
+  processes:
+  - type: web
+    instances: 1
+    memory: 1024M
+    disk_quota: 1024M
+    log-rate-limit-per-second: -1
+    health-check-type: port
+    readiness-health-check-type: process

@@ -2,6 +2,7 @@ package com.example.stock1.service;
 
 import com.example.stock1.data.ExchangeRateRepository;
 import com.example.stock1.entity.ExchangeRateEntity;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Query;
 import jakarta.transaction.Transactional;
@@ -10,6 +11,7 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -30,6 +32,7 @@ public class ExchangeRateServiceImpl implements ExchangeRateService {
     @Autowired
     private ExchangeRateRepository repository;
     @Autowired
+    @Qualifier("exchangeRateRedisTemplate")
     private RedisTemplate<String, ExchangeRateEntity> redisTemplate;
     private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("dd-MM-yyyy"); // Adjusted format
 
@@ -116,8 +119,31 @@ public class ExchangeRateServiceImpl implements ExchangeRateService {
         System.out.println("Exchange rate data cached in Redis");
     }
 
+    @Override
+    public ExchangeRateEntity getExchangeRateByDateRedis(String date) {
+        String redisKey = "exchange:" + date;
 
-@Override
+        Object value = redisTemplate.opsForValue().get(redisKey);
+        if (value instanceof ExchangeRateEntity) {
+            return (ExchangeRateEntity) value;
+        } else if (value instanceof LinkedHashMap) {
+            ObjectMapper mapper = new ObjectMapper();
+            return mapper.convertValue(value, ExchangeRateEntity.class);
+        }
+
+        // If not in Redis, fetch from DB and cache it
+        ExchangeRateEntity dbRate = repository.findByDate(date);
+        if (dbRate != null) {
+            redisTemplate.opsForValue().set(redisKey, dbRate);
+            System.out.println("Cached exchange rate in Redis: " + redisKey);
+        }
+
+        return dbRate; // could be null
+    }
+
+
+
+    @Override
 public List<Map<String, Object>> getRatesByCurrency(String currency) {
     // Whitelist currency names to prevent SQL injection
     List<String> allowedCurrencies = Arrays.asList("usd", "eur", "gbp", "jpy", "aud", "cad", "sgd", "chf", "cny", "aed");

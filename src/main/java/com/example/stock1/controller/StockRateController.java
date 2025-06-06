@@ -23,8 +23,8 @@ public class StockRateController {
 
     @Autowired
     private StockRateService stockrateService;
-@GetMapping("/get")
-public ResponseEntity<String> getPDF() {
+    @GetMapping("/get")
+    public ResponseEntity<String> getPDF() {
     String message = "Hello";
     return ResponseEntity.ok(message);
 }
@@ -35,18 +35,15 @@ public ResponseEntity<String> getPDF() {
             @RequestParam String date) {
 
         try {
-            LocalDate parsedDate = LocalDate.parse(date);
-
+//            LocalDate parsedDate = LocalDate.parse(date);
             // Fetch and store stock data
-            List<StockRateDTO> savedStocks = stockrateService.fetchAndStoreStockData(company.toUpperCase(), parsedDate);
-
+//            List<StockRateDTO> savedStocks = stockrateService.fetchAndStoreStockData(company.toUpperCase(), parsedDate);
+          List<StockRateDTO> savedStocks = stockrateService.fetchAndStoreStockDataRedis(company.toUpperCase(), date);
             if (savedStocks.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body("No stock data found or stored for " + company + " on " + parsedDate);
+                        .body("No stock data found or stored for " + company + " on " + date);
             }
-
             return ResponseEntity.ok(savedStocks);  // Return saved stock data
-
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body("Invalid date format. Use 'YYYY-MM-DD'. Error: " + e.getMessage());

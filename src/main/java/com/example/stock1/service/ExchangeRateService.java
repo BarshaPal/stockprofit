@@ -15,5 +15,6 @@ public interface ExchangeRateService {
     ExchangeRateEntity getExchangeRateByDate(String date);
     ExchangeRateEntity exchangeRateofCurrentDate();
     List<ExchangeRateEntity> purchasesellingRate(String date);
+    ExchangeRateEntity getExchangeRateByDateRedis(String date);
 
 }
